@@ -83,6 +83,33 @@ Windows-Auth …), die man in der Elgato-Software auf „System → Öffnen"-Tas
 kein Marktplatz, nichts zu updaten — Logik ändern heißt Skript editieren. Destruktive Skripte
 fragen vorher nach. Profi-Tipp: Auto-Switch-Profile der Elgato-Software je App zuordnen.
 
+## Architektur — wie eine Taste entsteht
+
+```mermaid
+flowchart TD
+    FW["👁 ForegroundWatcher — Fenster-Fokuswechsel"] --> CTX["WorkContext<br/>Prozess · Fenstertitel · Browser-URL<br/>Projektstruktur via WorkspaceProbe · Git-Zustand"]
+    CFG[("config/<br/>projects.json · steering.txt · buttons.json")] -.-> CTX
+    CTX --> FAB{"AiFactory<br/>AISTREAMDECK_AI"}
+    FAB -->|"claude (Default, Abo)"| B1["ClaudeCodeBackend"]
+    FAB -->|"codex (ChatGPT-Abo)"| B2["CodexBackend"]
+    FAB -->|"anthropic (API)"| B3["SuggestionClient"]
+    B1 --> ACT
+    B2 --> ACT
+    B3 --> ACT
+    ACT["DeckActions — typisiert &amp; validiert (AiParse)<br/>openUrl · hotkey · focusWindow · command"] --> DC["DeckController + Visuals<br/>Icons · Farben · Lauftext · 🦖"]
+    ENG["ButtonEngine — statische Seiten<br/>Git-Cockpit (GitStatus / GitOps)"] --> DC
+    DC --> HW{"IDeckHardware"}
+    HW -->|"MK.2 / XL"| SH["SharpHardware<br/>(StreamDeckSharp)"]
+    HW -->|"Stream Deck +"| PH["PlusHardware<br/>(eigener HID-Treiber)"]
+    SH --> DECK[["🎛 Stream Deck"]]
+    PH --> DECK
+    DECK -->|Tastendruck| EXE["ActionExecutor / Shell<br/>PowerShell nur sichtbar + j/N-Bestätigung"]
+```
+
+Kurzfassung: Fokuswechsel → Kontext einsammeln → KI-Backend deiner Wahl → typisierte, validierte
+Aktionen → auf die Tasten zeichnen. Drückst du eine Taste, läuft alles durch dieselbe
+Sicherheits-Schleuse. Der Dino erscheint, wann immer gewartet werden muss.
+
 ## Projektstruktur
 
 ```
@@ -100,6 +127,15 @@ AIStreamDeck/
 ├─ docs/               Pläne & Notizen
 └─ AIStreamDeck.slnx
 ```
+
+## Versionierung (das übliche BlaBla, kurz gehalten)
+
+- **SemVer**, Tags im Format `vMAJOR.MINOR.PATCH` — aktuell **v1.0.0**.
+- `main` ist immer lauffähig (baut warnungsfrei, `probe` grün); Experimente leben in Branches.
+- Breaking Changes (z. B. umbenannte Config-Felder oder Env-Variablen) → Major-Sprung
+  und ein deutlicher Hinweis in den Release Notes.
+- Was sich geändert hat, steht in den Commits bzw. GitHub-Releases. Ein separates
+  CHANGELOG gibt es, sobald es jemand ernsthaft vermisst.
 
 ## FAQ
 
