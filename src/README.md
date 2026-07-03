@@ -98,10 +98,14 @@ verführt nur, wenn sie etwas liefert, das Tastatur/Maus **nicht** können:
   Einzel-Handgriffe — mehrere Befehle/Klicks/Fenster in einem Druck.
 - **Nebenläufig**: Build/Tests/Watch starten im eigenen Fenster, während man im Editor weitertippt.
 - **Punktgenauer Absprung**: die exakte Doku-/Swagger-/PR-URL statt Maus-Suche; keine Startseiten.
-- **Konkretheit (hartes Kriterium)**: jede Taste muss ein Detail aus dem Kontext verbauen (Projekt,
-  Datei, Branch, Port, Fehlermeldung). Tasten, die auf jedem Entwickler-PC identisch stünden
-  („Build", „Docs"), sind Füllmaterial → weglassen. Beispiele aus dem Prompt dürfen nicht kopiert
-  werden. Mindestens eine Taste soll überraschen („Was, das geht?!").
+- **Konkretheit**: jede Taste soll ein Detail aus dem Kontext verbauen (Projekt, Datei, Branch,
+  Port, Fehlermeldung); Kontextspezifisches kommt immer vor Allgemeinem. Tasten, die auf jedem
+  Entwickler-PC identisch stünden („Build", „Docs"), sind nur als Lückenfüller auf den letzten
+  Plätzen erlaubt. Beispiele aus dem Prompt dürfen nicht kopiert werden. Mindestens eine Taste
+  soll überraschen („Was, das geht?!").
+- **Alle Tasten werden belegt**: immer genau 9 Vorschläge, beste zuerst — leere KI-Tasten gibt
+  es nicht (auf dem + zeigt die KI-Seite die ersten 8; beim API-Backend erzwingt zusätzlich das
+  Tool-Schema `minItems`/`maxItems` = 9).
 - **Hotkeys stark begrenzt**: höchstens einer, nur menü-vergrabene Akkorde, die zur Situation passen;
   triviale Shortcuts (Ctrl+S/C/V, F5, Alt+Tab, Tabwechsel) sind verboten — Tastatur ist schneller.
 - Jede Taste liefert ein Pflicht-**`desc`** (1 Satz, was sie tut) → läuft als **Lauftext unter dem

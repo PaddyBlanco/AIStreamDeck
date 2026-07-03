@@ -90,10 +90,11 @@ internal static class AiPrompts
         - openUrl: die EXAKTE Ziel-URL aus dem Kontext — die konkrete Doku-Seite zur gerade sichtbaren Technologie/API/Fehlermeldung, die laufende lokale App/Swagger, das GitHub-Repo/PR. Keine Startseiten. Feld 'url'.
         - focusWindow: Sprung zu einem Begleitprogramm, das erkennbar zum Workflow gehört. Feld 'processName'.
         - hotkey: HÖCHSTENS EINE solche Taste, nur menü-vergrabene Akkorde, die man nicht im Kopf hat und die JETZT zur Situation passen; Akkorde mit Leerzeichen ('Ctrl+K Ctrl+D'). NIE: Ctrl+S/C/V/X/Z, F5, Alt+Tab, Tab- oder Fensterwechsel — das ist auf der Tastatur schneller. Feld 'keys'.
-        KONKRETHEIT (hartes Kriterium): Jede Taste muss mindestens ein Detail aus DIESEM Kontext verbauen (Projekt-/Dateiname, Branch, Technologie, Port, Fehlermeldung). Eine Taste, die auf jedem beliebigen Entwickler-PC identisch stehen könnte ('Build', 'Docs', 'Terminal'), ist Füllmaterial — weglassen. Kopiere keine Beispiele aus dieser Anweisung, leite alles aus dem Kontext ab.
+        KONKRETHEIT: Jede Taste soll ein Detail aus DIESEM Kontext verbauen (Projekt-/Dateiname, Branch, Technologie, Port, Fehlermeldung). Kontextspezifische Ideen kommen IMMER vor allgemeinen; Tasten, die auf jedem beliebigen Entwickler-PC identisch stehen könnten ('Build', 'Docs', 'Terminal'), sind nur als Lückenfüller auf den letzten Plätzen erlaubt. Kopiere keine Beispiele aus dieser Anweisung, leite alles aus dem Kontext ab.
         Mindestens eine Taste soll überraschen: etwas, von dem er vermutlich nicht weiß, dass es mit EINEM Druck geht.
         'label' = das konkrete Objekt (max ~10 Zeichen, Muster 'Test Api', 'Kill 7060'), nie die Kategorie. 'desc' = Pflicht: EIN deutscher Satz (max ~70 Zeichen), was GENAU passiert — läuft als Lauftext unter dem Label.
-        Reihenfolge: was in DIESER Situation am wahrscheinlichsten sofort gebraucht wird, zuerst. Bis zu 9 Tasten — lieber 4 starke als 9 mit Füllern.
+        ANZAHL (Pflicht): Liefere IMMER GENAU 9 Tasten — nie weniger, keine Taste bleibt leer. Gehen die kontextspezifischen Ideen aus, füllst du die letzten Plätze mit den nützlichsten allgemeineren Entwickler-Abläufen (weiterhin keine trivialen Hotkeys).
+        Reihenfolge: was in DIESER Situation am wahrscheinlichsten sofort gebraucht wird, zuerst; die schwächsten ans Ende (auf kleineren Decks fallen sie hinten runter).
         """;
 
     /// <summary>Formatvorgabe für Backends ohne Output-Schema (Claude Code).</summary>

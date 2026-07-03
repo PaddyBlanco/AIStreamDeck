@@ -15,9 +15,10 @@ man weitertippt — der besteht ihn.
 
 ## Funktionen
 
-- **Adaptive KI-Tasten** — bei jedem Fokuswechsel schlägt die KI bis zu 9 Tasten vor, abgeleitet
-  aus Programm, Fenstertitel, Projektstruktur und Git-Zustand. Unter jedem Label läuft eine
-  Kurzbeschreibung als Lauftext, damit klar ist, was passiert, *bevor* man drückt.
+- **Adaptive KI-Tasten** — bei jedem Fokuswechsel belegt die KI **alle** adaptiven Tasten neu
+  (genau 9 Vorschläge, beste zuerst), abgeleitet aus Programm, Fenstertitel, Projektstruktur und
+  Git-Zustand. Unter jedem Label läuft eine Kurzbeschreibung als Lauftext, damit klar ist, was
+  passiert, *bevor* man drückt.
 - **Git-Cockpit** — Live-Status (Branch, dirty, ahead/behind) auf einer Taste; daneben
   **commit + pull + push in einem Druck**. Die Commit-Message erzeugt die KI aus dem staged Diff;
   bei Konflikten öffnet sich TortoiseGit zur manuellen Auflösung.

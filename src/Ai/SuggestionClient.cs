@@ -63,7 +63,7 @@ internal sealed class SuggestionClient : IAiBackend
         var tool = new
         {
             name = "suggest_keys",
-            description = "Liefert die Stream-Deck-Tasten fuer den aktuellen Arbeitskontext.",
+            description = "Liefert genau 9 Stream-Deck-Tasten fuer den aktuellen Arbeitskontext.",
             input_schema = new
             {
                 type = "object",
@@ -74,7 +74,9 @@ internal sealed class SuggestionClient : IAiBackend
                     keys = new
                     {
                         type = "array",
-                        description = "Bis zu 9 Tasten, beste zuerst.",
+                        description = "Genau 9 Tasten, beste zuerst.",
+                        minItems = 9,
+                        maxItems = 9,
                         items = new
                         {
                             type = "object",
