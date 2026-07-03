@@ -1,0 +1,19 @@
+# --- .NET Build-Artefakte ---
+[Bb]in/
+[Oo]bj/
+.vs/
+*.user
+
+# --- Lokale Konfiguration (echte Werte; Vorlagen: config/*.example.json) ---
+# Enthalten Maschinen-/Firmenspezifisches (Servernamen, Repo-Pfade) — bleiben lokal.
+config/projects.json
+config/sql.json
+
+# --- Laufzeit-Zustand der App (persönlich, wird von AIStreamDeck geschrieben) ---
+config/steering.txt
+config/buttons.json
+
+# --- Persönliches / lokale Tool-Einstellungen ---
+.claude/settings.local.json
+src/CLAUDE.md
+profiles/*.streamDeckProfile

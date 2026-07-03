@@ -1,0 +1,16 @@
+{
+  "_readme": "Nach config/projects.json kopieren und anpassen (die echte Datei bleibt via .gitignore lokal). 'default: true' markiert das Projekt, das benutzt wird, wenn eine Taste keinen Projektnamen übergibt. Pfade mit Forward-Slashes (C:/Dev/...) ODER doppelten Backslashes. 'launchProfile' = Profil aus Properties/launchSettings.json (bestimmt Port + ob der Browser automatisch aufgeht). Keine Secrets hier!",
+  "projects": [
+    {
+      "name": "MeinProjekt",
+      "default": true,
+      "path": "C:/Dev/MeinProjekt",
+      "sln": "C:/Dev/MeinProjekt/MeinProjekt.sln",
+      "backendProject": "C:/Dev/MeinProjekt/MeinProjekt.Web/MeinProjekt.Web.csproj",
+      "launchProfile": "https",
+      "kestrelPort": 5001,
+      "url": "https://localhost:5001",
+      "testTarget": "C:/Dev/MeinProjekt/MeinProjekt.Tests/MeinProjekt.Tests.csproj"
+    }
+  ]
+}

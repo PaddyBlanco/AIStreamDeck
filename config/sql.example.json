@@ -1,0 +1,7 @@
+{
+  "_readme": "Nach config/sql.json kopieren und anpassen (die echte Datei bleibt via .gitignore lokal). Verbindung ausschließlich über Windows-Authentifizierung (Integrated Security) — KEINE Passwörter/Logins hier ablegen, nur Server- und Datenbankname. Für sql-backup zusätzlich 'backupDir' setzen (vom SQL-Server-Dienst beschreibbarer Pfad).",
+  "server": "meinserver.example.local",
+  "database": "MeineDatenbank",
+  "topRows": 25,
+  "longRunningSeconds": 5
+}
