@@ -78,6 +78,9 @@ Umschalten über `AISTREAMDECK_AI`:
 An das KI-Backend gehen **nur Prozessname + Fenstertitel** (+ ggf. Browser-URL sowie lokale
 **Ordner-/Repo-Pfade**, damit `command`-Vorschläge per `cd` im richtigen Verzeichnis starten), und —
 **nur beim Commit** — der gekürzte staged Diff des Arbeits-Repos. Keine Screenshots/Fensterinhalte.
+Der **Git-/Repo-Kontext wird nur mitgesendet, wenn ein Entwicklungswerkzeug im Fokus ist**
+(`IsDevTool` in `Program.cs`) — sonst zieht er die Vorschläge auch in Outlook & Co. Richtung
+Dev-Buttons.
 
 **Editor-Ordner-Kontext (VS Code/Cursor):** Damit die Vorschläge zum offenen Projekt passen, ermittelt
 `WorkspaceProbe` best-effort den offenen Ordner und beschreibt **kompakt** seine Struktur (Projekttyp,
@@ -94,6 +97,10 @@ Die adaptiven Tasten folgen einem strengen Maßstab — Prompt zentral in **`AiP
 Geräts**: Die Hände liegen auf der Tastatur, ein Griff zum Deck kostet Umgreifen + Blick. Eine Taste
 verführt nur, wenn sie etwas liefert, das Tastatur/Maus **nicht** können:
 
+- **App-Bindung (hartes Kriterium, vor allem anderen)**: Tasten passen immer zum **aktiven
+  Programm** — in Outlook Mail-/Termin-Aktionen, im Browser passend zur Seite; Entwickler-Befehle
+  (dotnet/git/Ports) gibt es nur in Editor/IDE/Terminal. Auch der Modus-/Steuer-Prompt ist auf
+  Entwicklungswerkzeuge gescoped.
 - **Ein Druck = ganzer Ablauf**: PowerShell-Ketten (`cd <Projekt>; dotnet test; …`) statt
   Einzel-Handgriffe — mehrere Befehle/Klicks/Fenster in einem Druck.
 - **Nebenläufig**: Build/Tests/Watch starten im eigenen Fenster, während man im Editor weitertippt.

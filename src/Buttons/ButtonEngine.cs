@@ -194,11 +194,11 @@ internal sealed class ButtonEngine
     private void CycleMode()
     {
         // Achtung: Der Text geht als "Vorgabe des Nutzers (UNBEDINGT beachten)" in den KI-Prompt —
-        // er darf dem Verleitungs-Massstab (AiPrompts) nicht widersprechen (fr. Coding-Modus bat um
-        // Editor-Hotkeys und drueckte damit die Vorschlaege in die unattraktivste Kategorie).
-        string[] modes = { "", "Coding-Modus: Abläufe fürs aktuelle Projekt bevorzugen (Build/Test/Run/EF, Ports) — keine Editor-Hotkeys.",
-            "Review-Modus: Diff/Vergleich/Git/Test bevorzugen.",
-            "Debug-Modus: Logs, Breakpoints, Prozesse/Ports bevorzugen." };
+        // er darf dem Verleitungs-Massstab (AiPrompts) nicht widersprechen und muss auf Dev-Tools
+        // gescoped sein, sonst erzeugt er Dev-Buttons auch in Outlook & Co.
+        string[] modes = { "", "Coding-Modus (gilt nur in Entwicklungswerkzeugen): Abläufe fürs aktuelle Projekt bevorzugen (Build/Test/Run/EF, Ports) — keine Editor-Hotkeys.",
+            "Review-Modus (gilt nur in Entwicklungswerkzeugen): Diff/Vergleich/Git/Test bevorzugen.",
+            "Debug-Modus (gilt nur in Entwicklungswerkzeugen): Logs, Breakpoints, Prozesse/Ports bevorzugen." };
         int cur = Array.FindIndex(modes, m => m == _steering.Current);
         _steering.Set(modes[(cur + 1 + modes.Length) % modes.Length]);
         Console.WriteLine($"[Modus] -> '{_steering.Current}'");

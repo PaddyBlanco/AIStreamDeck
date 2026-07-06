@@ -70,7 +70,8 @@ Auswahl über die Umgebungsvariable `AISTREAMDECK_AI`:
 
 **Übermittelte Daten:** Prozessname, Fenstertitel, ggf. Browser-URL, eine kompakte
 Strukturbeschreibung des offenen Editor-Projekts (nur Datei- und Ordnernamen samt Pfaden) sowie
-beim Commit der gekürzte staged Diff. **Keine Dateiinhalte, keine Screenshots.**
+beim Commit der gekürzte staged Diff; Git-/Projekt-Zustand nur, wenn ein Entwicklungswerkzeug im
+Fokus ist. **Keine Dateiinhalte, keine Screenshots.**
 Details: [src/README.md](src/README.md).
 
 ## Architektur

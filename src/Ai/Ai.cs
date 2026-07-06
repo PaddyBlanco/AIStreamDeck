@@ -80,16 +80,17 @@ internal static class AiPrompts
 {
     /// <summary>Regelwerk ohne Formatvorgabe (Format kommt je Backend: Schema bzw. <see cref="KeysJsonTail"/>).</summary>
     public const string KeysGuidance = """
-        Du belegst die adaptiven Tasten eines Stream Decks für einen .NET-/C#-Softwareentwickler, der schnell und tastaturzentriert arbeitet.
+        Du belegst die adaptiven Tasten eines Stream Decks. Der Nutzer ist .NET-/C#-Softwareentwickler und arbeitet schnell und tastaturzentriert — aber die Tasten gelten IMMER für das AKTIVE Programm im Vordergrund, nicht für seinen Beruf.
+        APP-BINDUNG (hartes Kriterium, vor allem anderen): Jede Taste muss zum AKTIVEN Programm und der dort sichtbaren Aufgabe passen. Mail-/Kalender-Programm → E-Mail-, Termin- und Organisations-Aktionen; Browser → passend zur offenen Seite; Editor/IDE/Terminal → Entwickler-Abläufe. Entwickler-Befehle (dotnet, git, Builds, Ports) sind AUSSERHALB von Entwicklungswerkzeugen VERBOTEN — im Posteingang hilft kein 'dotnet watch'. Auch eine Nutzer-Vorgabe im Kontext gilt nur, soweit sie zum aktiven Programm passt.
         PHYSIK DES GERÄTS — daran wird JEDE Taste gemessen: Seine Hände liegen auf der Tastatur, ein Griff zum Deck kostet Umgreifen + Blick. Eine Taste verführt nur zum Drücken, wenn sie etwas liefert, das Tastatur und Maus NICHT können:
         1) EIN Druck ersetzt einen ganzen ABLAUF (mehrere Befehle/Klicks/Fenster) — nie nur einen Handgriff.
-        2) Sie startet Arbeit NEBENLÄUFIG im eigenen Fenster: Build/Tests/Watch laufen an, während er im Editor weitertippt.
+        2) Sie startet Arbeit NEBENLÄUFIG im eigenen Fenster, während er im aktiven Programm weiterarbeitet.
         3) Sie springt PUNKTGENAU zu einer Ressource, die er sonst per Maus und Suche jagen müsste.
         Tasten-Typen, nach Verführungskraft sortiert:
         - command (PowerShell, öffnet ein sichtbares Fenster): verkette mehrere Schritte mit ';' zu EINEM Ablauf (Port freiräumen + neu starten; bauen + testen + Ergebnis öffnen). Der Befehl startet NICHT im Projektordner — steht im Kontext ein Ordner-/Repo-Pfad, beginne mit 'cd <Pfad>; '. Feld 'command'.
         - openUrl: die EXAKTE Ziel-URL aus dem Kontext — die konkrete Doku-Seite zur gerade sichtbaren Technologie/API/Fehlermeldung, die laufende lokale App/Swagger, das GitHub-Repo/PR. Keine Startseiten. Feld 'url'.
         - focusWindow: Sprung zu einem Begleitprogramm, das erkennbar zum Workflow gehört. Feld 'processName'.
-        - hotkey: HÖCHSTENS EINE solche Taste, nur menü-vergrabene Akkorde, die man nicht im Kopf hat und die JETZT zur Situation passen; Akkorde mit Leerzeichen ('Ctrl+K Ctrl+D'). NIE: Ctrl+S/C/V/X/Z, F5, Alt+Tab, Tab- oder Fensterwechsel — das ist auf der Tastatur schneller. Feld 'keys'.
+        - hotkey: nur menü-vergrabene Kombos, die man nicht im Kopf hat und die JETZT zur Situation passen; Akkorde mit Leerzeichen ('Ctrl+K Ctrl+D'). In Editoren/IDEs höchstens EINE solche Taste; in Programmen ohne CLI (Mail/Office/Explorer) dürfen es mehrere sein, wenn jede eine echte Klickstrecke ersetzt. NIE: Ctrl+S/C/V/X/Z, F5, Alt+Tab, Tab- oder Fensterwechsel — das ist auf der Tastatur schneller. Feld 'keys'.
         KONKRETHEIT: Jede Taste soll ein Detail aus DIESEM Kontext verbauen (Projekt-/Dateiname, Branch, Technologie, Port, Fehlermeldung). Kontextspezifische Ideen kommen IMMER vor allgemeinen; Tasten, die auf jedem beliebigen Entwickler-PC identisch stehen könnten ('Build', 'Docs', 'Terminal'), sind nur als Lückenfüller auf den letzten Plätzen erlaubt. Kopiere keine Beispiele aus dieser Anweisung, leite alles aus dem Kontext ab.
         Mindestens eine Taste soll überraschen: etwas, von dem er vermutlich nicht weiß, dass es mit EINEM Druck geht.
         'label' = das konkrete Objekt (max ~10 Zeichen, Muster 'Test Api', 'Kill 7060'), nie die Kategorie. 'desc' = Pflicht: EIN deutscher Satz (max ~70 Zeichen), was GENAU passiert — läuft als Lauftext unter dem Label.

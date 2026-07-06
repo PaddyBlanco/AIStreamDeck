@@ -272,6 +272,11 @@ IReadOnlyList<DeckAction> lastDynamic = Array.Empty<DeckAction>();
 KeyVisual GitDoVisual() => new("up", "Git", "commit+push", Palette.Push, Pulse: true);
 KeyVisual PromptVisual() => new("edit", "Prompt", steering.Current.Length > 0 ? "aktiv" : "leer", Color.FromArgb(200, 80, 180));
 
+// Nur in Entwicklungswerkzeugen gehoert der Git-/Repo-Kontext in den Prompt — sonst zieht er
+// die Vorschlaege in Richtung Dev-Buttons (z. B. 'dotnet watch' im Outlook-Posteingang).
+static bool IsDevTool(string proc) => proc.ToLowerInvariant() is "code" or "cursor" or "windsurf"
+    or "devenv" or "rider64" or "ssms" or "windowsterminal" or "wt" or "powershell" or "pwsh" or "cmd";
+
 WorkContext BuildContext(string proc, string title)
 {
     nint hwnd = Native.GetForegroundWindow();
@@ -282,10 +287,12 @@ WorkContext BuildContext(string proc, string title)
         if (pid != 0) exe = System.Diagnostics.Process.GetProcessById((int)pid).MainModule?.FileName;
     }
     catch { }
-    var info = RepoPath is null ? default : GitStatus.Read(RepoPath);
+    bool devTool = IsDevTool(proc);
+    var info = devTool && RepoPath is not null ? GitStatus.Read(RepoPath) : default;
     return new WorkContext(proc, title, exe, BrowserUrl.TryGet(hwnd, proc),
         info.Ok ? info.Branch : null,
-        RepoPath is null ? Array.Empty<string>() : GitStatus.ChangedFiles(RepoPath, 5), steering.Current,
+        devTool && RepoPath is not null ? GitStatus.ChangedFiles(RepoPath, 5) : Array.Empty<string>(),
+        steering.Current,
         WorkspaceProbe.Describe(proc, title, DevRoots), info.Ok ? RepoPath : null);
 }
 WorkContext CurrentContext() => BuildContext(lastProc, lastTitle);
