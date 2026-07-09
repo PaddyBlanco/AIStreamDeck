@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Drawing;
 
 namespace AIStreamDeck;
 
@@ -41,18 +40,6 @@ internal static class GitStatus
             }
         }
         return new Info(branch, dirty, ahead, behind, true);
-    }
-
-    public static (string label, Color color) Render(Info i)
-    {
-        if (!i.Ok) return ("git\nn/a", Color.FromArgb(60, 60, 60));
-        string sync = i.Ahead > 0 || i.Behind > 0 ? $"\n↑{i.Ahead} ↓{i.Behind}" : "";
-        string label = $"{i.Branch}\n{(i.Dirty ? "dirty" : "clean")}{sync}";
-        Color color =
-            i.Dirty ? Color.FromArgb(150, 100, 0) :          // gelb/amber
-            (i.Ahead > 0 || i.Behind > 0) ? Color.FromArgb(0, 70, 130) : // blau
-            Color.FromArgb(0, 110, 40);                       // gruen
-        return (label, color);
     }
 
     /// <summary>Bis zu <paramref name="max"/> geaenderte Dateinamen (read-only).</summary>

@@ -12,21 +12,6 @@ internal sealed class DeckController(IDeckHardware hw)
 
     public int KeyId(int col, int row) => row * CountX + col;
 
-    private static string? _iconFamily;
-
-    /// <summary>Monochrome Icon-Schrift (Win 11: Segoe Fluent Icons, sonst MDL2). Null = keine.</summary>
-    private static string? IconFamily()
-    {
-        if (_iconFamily is not null) return _iconFamily.Length == 0 ? null : _iconFamily;
-        foreach (var name in new[] { "Segoe Fluent Icons", "Segoe MDL2 Assets" })
-        {
-            try { using var ff = new FontFamily(name); _iconFamily = name; return name; }
-            catch { /* nicht installiert */ }
-        }
-        _iconFamily = "";
-        return null;
-    }
-
     /// <summary>Animierte Ruhe-Darstellung: Gradient + Icon + Label + Unterzeile + Akzentbalken.
     /// tick treibt den Lauftext, pulse (0..1) die Akzent-Helligkeit.</summary>
     public void DrawKey(int keyId, KeyVisual v, int tick, float pulse)

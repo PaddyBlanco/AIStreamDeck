@@ -464,7 +464,7 @@ void OpenNewButton()
         try
         {
             string? json = await suggestions.GenerateAsync(prompt, ButtonSchema);
-            if (json != null) def = JsonSerializer.Deserialize<ButtonDef>(ExtractJson(json),
+            if (json != null) def = JsonSerializer.Deserialize<ButtonDef>(AiParse.ExtractJson(json),
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         }
         catch (Exception ex) { Console.WriteLine($"[Neuer] {ex.Message}"); }
@@ -508,7 +508,7 @@ async Task<DialSkill?> GetDialSkill(WorkContext ctx)
     {
         string? json = await suggestions.GenerateAsync(prompt, DialSchema);
         if (string.IsNullOrWhiteSpace(json)) { Console.WriteLine("[Regler3] KI: keine Antwort."); return null; }
-        var ds = JsonSerializer.Deserialize<DialSkill>(ExtractJson(json), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        var ds = JsonSerializer.Deserialize<DialSkill>(AiParse.ExtractJson(json), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         dialSkillCache[ctx.CacheKey] = ds; // Ergebnis (auch null) merken -> nicht bei jedem Titelwechsel neu fragen
         return ds;
     }
@@ -721,12 +721,6 @@ hw.Clear();
 hw.Dispose();
 
 // ---- Helfer -----------------------------------------------------------------
-static string ExtractJson(string s)
-{
-    int a = s.IndexOf('{'); int b = s.LastIndexOf('}');
-    return a >= 0 && b > a ? s[a..(b + 1)] : s;
-}
-
 static string? GlyphFor(string type) => type switch
 {
     "openUrl" => "globe",

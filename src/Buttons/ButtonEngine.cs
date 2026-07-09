@@ -11,7 +11,6 @@ internal sealed class ButtonDef
     public string Icon { get; set; } = "";       // Vektor-Icon-Name (Visuals.IconDraw)
     public string Color { get; set; } = "idle";  // "#RRGGBB" oder Palette-Name
     public string Kind { get; set; } = "action";  // generator|ask|mode|command|action|new|monitor
-    public string Trigger { get; set; } = "press"; // press|focus|timer:Ns (aktuell nur press)
     public string[] Context { get; set; } = Array.Empty<string>(); // input|selection|clipboard|window|git|url
     public string? Prompt { get; set; }
     public string? Command { get; set; }            // PowerShell/Script (command/runPowershell)
@@ -113,10 +112,10 @@ internal sealed class ButtonEngine
         if (buttonsPage && slot == 0) { _onNew?.Invoke(); return; }
         int bi = buttonsPage ? slot - 1 : slot;
         if (bi < 0 || bi >= page.Buttons.Count) return;
-        _ = ExecuteAsync(page.Buttons[bi], keyId, pageIndex, slot);
+        _ = ExecuteAsync(page.Buttons[bi], keyId);
     }
 
-    private async Task ExecuteAsync(ButtonDef d, int keyId, int pageIndex, int slot)
+    private async Task ExecuteAsync(ButtonDef d, int keyId)
     {
         try
         {
@@ -125,7 +124,9 @@ internal sealed class ButtonEngine
             if (d.Kind == "command" || d.Output.Contains("runPowershell"))
             {
                 if (!_allowCommands) { Flash(keyId, "aus", Color.FromArgb(110, 110, 110), d); return; }
-                Shell.RunPowershellVisible(d.Command ?? d.Target ?? ""); // vorab bei Erstellung geprueft -> ohne Extra-Dialog
+                // Confirm=true setzt Program.cs bei KI-erzeugten command-Buttons -> Ja/Nein im Fenster;
+                // handgepflegte buttons.json (Confirm=false) laufen wie bisher direkt.
+                Shell.RunPowershellVisible(d.Command ?? d.Target ?? "", confirm: d.Confirm);
                 Flash(keyId, "läuft", Color.FromArgb(0, 110, 40), d);
                 return;
             }
@@ -157,7 +158,7 @@ internal sealed class ButtonEngine
                 case "openUrl": _exec.Run(new DeckAction(d.Label, "openUrl", Url: d.Target ?? result)); break;
                 case "runScript": _exec.RunScript(d.Target ?? result); break;
                 case "hotkey": Hotkey.Send(d.Target ?? result); break;
-                case "runPowershell": if (_allowCommands) Shell.RunPowershellVisible(d.Command ?? d.Target ?? ""); break;
+                case "runPowershell": if (_allowCommands) Shell.RunPowershellVisible(d.Command ?? d.Target ?? "", confirm: d.Confirm); break;
             }
         }
     }

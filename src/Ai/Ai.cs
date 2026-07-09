@@ -104,6 +104,16 @@ internal static class AiPrompts
 
     /// <summary>Kontext + Regelwerk (ohne Formatvorgabe).</summary>
     public static string Keys(WorkContext ctx) => ctx.Describe() + "\n\n" + KeysGuidance;
+
+    /// <summary>Prompt fuer die Commit-Message aus dem staged Diff (beide CLI-Backends).</summary>
+    public static string CommitMsg(string diff)
+        => "Schreibe eine einzige knappe Git-Commit-Message (imperativ, max ~72 Zeichen, "
+         + "kein Punkt am Ende). Antworte NUR mit der Message, ohne Anfuehrungszeichen.\n\nStaged Diff:\n"
+         + AiParse.Trunc(diff, 8000);
+
+    /// <summary>Haengt die JSON-Formatvorgabe an (Backends ohne natives Output-Schema).</summary>
+    public static string WithSchema(string prompt, string? schemaJson) => schemaJson is null ? prompt
+        : prompt + "\n\nAntworte AUSSCHLIESSLICH als JSON nach diesem Schema (kein Markdown, kein Text drumherum):\n" + schemaJson;
 }
 
 /// <summary>Gemeinsames Parsen/Validieren der KI-Antwort (Sicherheitsgrenze: nur bekannte Typen).</summary>
@@ -149,11 +159,76 @@ internal static class AiParse
 
     public static string Trunc(string s, int max) => s.Length <= max ? s : s[..max] + "\n…(gekuerzt)";
 
+    public static string Tail(string s) => s.Length <= 300 ? s : s[^300..];
+
+    /// <summary>Erste nicht-leere Zeile (Commit-Message-Antworten der CLIs koennen Zusatzzeilen enthalten).</summary>
+    public static string? FirstLine(string? s) => s?.Split('\n', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()?.Trim();
+
     /// <summary>Schneidet den JSON-Block heraus (falls die KI Text/Markdown drumherum liefert).</summary>
     public static string ExtractJson(string s)
     {
         int a = s.IndexOf('{'); int b = s.LastIndexOf('}');
         return a >= 0 && b > a ? s[a..(b + 1)] : s;
+    }
+}
+
+/// <summary>
+/// Gemeinsamer CLI-Start der Abo-Backends (codex/claude via cmd.exe): UTF-8-Pipes, Prompt via
+/// stdin, 90s-Timeout mit Prozessbaum-Kill. Liefert stdout bei Exit 0, sonst null (geloggt mit tag).
+/// </summary>
+internal static class Cli
+{
+    public static async Task<string?> RunAsync(string tag, IReadOnlyList<string> args, string stdin,
+        bool stripAnthropicKey = false)
+    {
+        var psi = new ProcessStartInfo("cmd.exe")
+        {
+            RedirectStandardInput = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            // Ohne explizites UTF-8 laufen die Pipes im OEM-Codepage -> Umlaute aus
+            // Fenstertiteln (hin) bzw. in desc-Lauftexten (zurueck) werden zerstoert.
+            StandardInputEncoding = new UTF8Encoding(false),
+            StandardOutputEncoding = Encoding.UTF8,
+            StandardErrorEncoding = Encoding.UTF8,
+        };
+        psi.ArgumentList.Add("/c");
+        foreach (var a in args) psi.ArgumentList.Add(a);
+        if (stripAnthropicKey) psi.Environment.Remove("ANTHROPIC_API_KEY"); // Abo/OAuth erzwingen, nie API-Billing
+
+        Process? p = null;
+        try
+        {
+            p = Process.Start(psi)!;
+            await p.StandardInput.WriteAsync(stdin);
+            p.StandardInput.Close();
+            var drainOut = p.StandardOutput.ReadToEndAsync();
+            var drainErr = p.StandardError.ReadToEndAsync();
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(90));
+            await p.WaitForExitAsync(cts.Token);
+            await Task.WhenAll(drainOut, drainErr);
+
+            if (p.ExitCode != 0)
+            {
+                Console.WriteLine($"{tag} exit {p.ExitCode}: {AiParse.Tail(await drainErr)}");
+                return null;
+            }
+            return await drainOut;
+        }
+        catch (OperationCanceledException)
+        {
+            Console.WriteLine($"{tag} Timeout (90s).");
+            try { p?.Kill(entireProcessTree: true); } catch { } // sonst laeuft die CLI verwaist weiter
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"{tag} Fehler: {ex.Message}");
+            return null;
+        }
+        finally { try { p?.Dispose(); } catch { } }
     }
 }
 
@@ -197,12 +272,7 @@ internal sealed class CodexBackend : IAiBackend
     }
 
     public async Task<string?> CommitMessageAsync(string diff)
-    {
-        string prompt = "Schreibe eine einzige knappe Git-Commit-Message (imperativ, max ~72 Zeichen, "
-            + "kein Punkt am Ende). Antworte NUR mit der Message, ohne Anfuehrungszeichen.\n\nStaged Diff:\n"
-            + AiParse.Trunc(diff, 8000);
-        return (await RunAsync(prompt, null))?.Split('\n', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()?.Trim();
-    }
+        => AiParse.FirstLine(await RunAsync(AiPrompts.CommitMsg(diff), null));
 
     public async Task<string?> GenerateAsync(string prompt, string? schemaJson = null)
     {
@@ -219,60 +289,18 @@ internal sealed class CodexBackend : IAiBackend
     private static async Task<string?> RunAsync(string prompt, string? schemaPath)
     {
         string outFile = Path.Combine(Path.GetTempPath(), "aistreamdeck_out_" + Guid.NewGuid().ToString("N") + ".txt");
-        var psi = new ProcessStartInfo("cmd.exe")
-        {
-            RedirectStandardInput = true,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-            // Ohne explizites UTF-8 laufen die Pipes im OEM-Codepage -> Umlaute aus
-            // Fenstertiteln (hin) bzw. in desc-Lauftexten (zurueck) werden zerstoert.
-            StandardInputEncoding = new UTF8Encoding(false),
-            StandardOutputEncoding = Encoding.UTF8,
-            StandardErrorEncoding = Encoding.UTF8,
-        };
-        foreach (var a in new[] { "/c", "codex", "exec", "--skip-git-repo-check", "--ephemeral",
-                                  "--sandbox", "read-only", "--color", "never" })
-            psi.ArgumentList.Add(a);
-        if (schemaPath is not null) { psi.ArgumentList.Add("--output-schema"); psi.ArgumentList.Add(schemaPath); }
-        psi.ArgumentList.Add("--output-last-message"); psi.ArgumentList.Add(outFile);
-        psi.ArgumentList.Add("-"); // Prompt aus stdin
-
-        Process? p = null;
+        var args = new List<string> { "codex", "exec", "--skip-git-repo-check", "--ephemeral",
+                                      "--sandbox", "read-only", "--color", "never" };
+        if (schemaPath is not null) { args.Add("--output-schema"); args.Add(schemaPath); }
+        args.Add("--output-last-message"); args.Add(outFile);
+        args.Add("-"); // Prompt aus stdin
         try
         {
-            p = Process.Start(psi)!;
-            await p.StandardInput.WriteAsync(prompt);
-            p.StandardInput.Close();
-            var drainOut = p.StandardOutput.ReadToEndAsync();
-            var drainErr = p.StandardError.ReadToEndAsync();
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(90));
-            await p.WaitForExitAsync(cts.Token);
-            await Task.WhenAll(drainOut, drainErr);
-
-            if (p.ExitCode != 0)
-            {
-                Console.WriteLine($"[KI/codex] exit {p.ExitCode}: {Tail(await drainErr)}");
-                return null;
-            }
+            if (await Cli.RunAsync("[KI/codex]", args, prompt) is null) return null;
             return File.Exists(outFile) ? await File.ReadAllTextAsync(outFile) : null;
         }
-        catch (OperationCanceledException)
-        {
-            Console.WriteLine("[KI/codex] Timeout (90s).");
-            try { p?.Kill(entireProcessTree: true); } catch { } // sonst laeuft codex.exe verwaist weiter
-            return null;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[KI/codex] Fehler: {ex.Message}");
-            return null;
-        }
-        finally { try { p?.Dispose(); } catch { } try { File.Delete(outFile); } catch { } }
+        finally { try { File.Delete(outFile); } catch { } }
     }
-
-    private static string Tail(string s) => s.Length <= 300 ? s : s[^300..];
 
     // OpenAI-Strict: alle Properties in 'required', optionale als nullable.
     private const string SchemaJson = """
@@ -335,84 +363,35 @@ internal sealed class ClaudeCodeBackend : IAiBackend
     }
 
     public async Task<string?> CommitMessageAsync(string diff)
-    {
-        string prompt = "Schreibe eine einzige knappe Git-Commit-Message (imperativ, max ~72 Zeichen, "
-            + "kein Punkt am Ende). Antworte NUR mit der Message, ohne Anfuehrungszeichen.\n\nStaged Diff:\n"
-            + AiParse.Trunc(diff, 8000);
-        return (await RunAsync(prompt))?.Split('\n', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()?.Trim();
-    }
+        => AiParse.FirstLine(await RunAsync(AiPrompts.CommitMsg(diff)));
 
     public async Task<string?> GenerateAsync(string prompt, string? schemaJson = null)
-    {
-        string full = schemaJson == null ? prompt
-            : prompt + "\n\nAntworte AUSSCHLIESSLICH als JSON nach diesem Schema (kein Markdown, kein Text drumherum):\n" + schemaJson;
-        return (await RunAsync(full))?.Trim();
-    }
+        => (await RunAsync(AiPrompts.WithSchema(prompt, schemaJson)))?.Trim();
 
     private static async Task<string?> RunAsync(string prompt)
     {
-        var psi = new ProcessStartInfo("cmd.exe")
+        string? stdout = await Cli.RunAsync("[KI/claude]", new[]
         {
-            RedirectStandardInput = true,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-            // Ohne explizites UTF-8 laufen die Pipes im OEM-Codepage -> Umlaute aus
-            // Fenstertiteln (hin) bzw. in desc-Lauftexten (zurueck) werden zerstoert.
-            StandardInputEncoding = new UTF8Encoding(false),
-            StandardOutputEncoding = Encoding.UTF8,
-            StandardErrorEncoding = Encoding.UTF8,
-        };
-        foreach (var a in new[]
-        {
-            "/c", "claude", "-p", "--model", Model, "--effort", Effort, "--output-format", "json",
+            "claude", "-p", "--model", Model, "--effort", Effort, "--output-format", "json",
             "--system-prompt", "Du bist ein Antwort-Backend fuer Stream-Deck-Tasten. Liefere NUR die geforderte Ausgabe, ohne Erklaerung, ohne Markdown.",
             "--disallowed-tools", "Bash Edit Write Read WebFetch WebSearch NotebookEdit",
             "--disable-slash-commands",
-        })
-            psi.ArgumentList.Add(a);
-        psi.Environment.Remove("ANTHROPIC_API_KEY"); // Abo/OAuth erzwingen, nie API-Billing
-
-        Process? p = null;
+        }, prompt, stripAnthropicKey: true);
+        if (stdout is null) return null;
         try
         {
-            p = Process.Start(psi)!;
-            await p.StandardInput.WriteAsync(prompt);
-            p.StandardInput.Close();
-            var drainOut = p.StandardOutput.ReadToEndAsync();
-            var drainErr = p.StandardError.ReadToEndAsync();
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(90));
-            await p.WaitForExitAsync(cts.Token);
-            await Task.WhenAll(drainOut, drainErr);
-
-            string stdout = await drainOut;
-            if (p.ExitCode != 0)
-            {
-                Console.WriteLine($"[KI/claude] exit {p.ExitCode}: {Tail(await drainErr)}");
-                return null;
-            }
             using var doc = JsonDocument.Parse(AiParse.ExtractJson(stdout));
             if (doc.RootElement.TryGetProperty("is_error", out var e) && e.ValueKind == JsonValueKind.True)
             {
-                Console.WriteLine($"[KI/claude] is_error: {Tail(stdout)}");
+                Console.WriteLine($"[KI/claude] is_error: {AiParse.Tail(stdout)}");
                 return null;
             }
             return doc.RootElement.TryGetProperty("result", out var r) ? r.GetString() : null;
-        }
-        catch (OperationCanceledException)
-        {
-            Console.WriteLine("[KI/claude] Timeout (90s).");
-            try { p?.Kill(entireProcessTree: true); } catch { } // sonst laeuft claude verwaist weiter
-            return null;
         }
         catch (Exception ex)
         {
             Console.WriteLine($"[KI/claude] Fehler: {ex.Message}");
             return null;
         }
-        finally { try { p?.Dispose(); } catch { } }
     }
-
-    private static string Tail(string s) => s.Length <= 300 ? s : s[^300..];
 }

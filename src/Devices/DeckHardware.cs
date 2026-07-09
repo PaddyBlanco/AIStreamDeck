@@ -78,7 +78,6 @@ internal sealed class PlusHardware : IDeckHardware
         _plus.KeyChanged += (k, d) => KeyChanged?.Invoke(k, d);
     }
 
-    public StreamDeckPlus Device => _plus;
     public int CountX => StreamDeckPlus.Cols;
     public int CountY => StreamDeckPlus.Rows;
     public int KeySize => StreamDeckPlus.KeySize;

@@ -141,7 +141,7 @@ internal sealed class SuggestionClient : IAiBackend
             max_tokens = 200,
             system = "Du schreibst eine einzige, knappe Git-Commit-Message (imperativ, max ~72 Zeichen, "
                    + "kein Punkt am Ende). Antworte NUR mit der Message: keine Anfuehrungszeichen, kein Praefix, keine Erklaerung.",
-            messages = new[] { new { role = "user", content = "Staged Diff:\n" + Trunc(diff, 8000) } }
+            messages = new[] { new { role = "user", content = "Staged Diff:\n" + AiParse.Trunc(diff, 8000) } }
         };
         try
         {
@@ -168,9 +168,7 @@ internal sealed class SuggestionClient : IAiBackend
     public async Task<string?> GenerateAsync(string prompt, string? schemaJson = null)
     {
         if (!Enabled) return null;
-        string content = schemaJson == null
-            ? prompt
-            : prompt + "\n\nAntworte AUSSCHLIESSLICH als JSON nach diesem Schema (kein Markdown, kein Text drumherum):\n" + schemaJson;
+        string content = AiPrompts.WithSchema(prompt, schemaJson);
         var body = new
         {
             model = Model,
@@ -190,6 +188,4 @@ internal sealed class SuggestionClient : IAiBackend
         }
         catch (Exception ex) { Console.WriteLine($"[KI] Generate Fehler: {ex.Message}"); return null; }
     }
-
-    private static string Trunc(string s, int max) => s.Length <= max ? s : s[..max] + "\n…(gekuerzt)";
 }
